@@ -1,0 +1,95 @@
+name: Build-and-Test-CLANG-MacOS
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+    - main
+    - dev
+
+jobs:
+  Build:
+    runs-on: macos-latest
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [Debug, Release]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install the latest clang compiler.
+      run: |
+            brew install llvm
+
+    - name: Install Seaborn
+      run: |
+            pip install seaborn
+
+    - name: Install Nasm.
+      run: |
+            brew install nasm
+
+    - name: Configure CMake
+      working-directory: ./
+      run: |
+           sudo cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ -DOIML_CPP_TESTS="TRUE"
+
+    - name: Build the Test
+      working-directory: ./Build
+      run: |
+           sudo cmake --build . --config=${{matrix.build_type}}
+
+    - name: Install the Test
+      working-directory: ./Build
+      run: |
+           sudo cmake --install . --config=${{matrix.build_type}}
+
+    - name: Run the Test
+      run: |
+           sudo chmod +x /usr/local/bin/oiml_test
+           sudo /usr/local/bin/oiml_test
+      continue-on-error: true
+   
+  Build-Fallback:
+    runs-on: macos-latest
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [Release]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install the latest clang compiler.
+      run: |
+            brew install llvm
+
+    - name: Install Seaborn
+      run: |
+            pip install seaborn
+
+    - name: Install Nasm.
+      run: |
+            brew install nasm
+
+    - name: Configure CMake
+      run: |
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ -DOIML_CPP_TESTS="TRUE" -DOIML_CPU_INSTRUCTIONS=0
+
+    - name: Build the Test
+      run: |
+           cmake --build ./Build --config=${{matrix.build_type}}
+
+    - name: Install the Test
+      run: |
+           sudo cmake --install ./Build --config=${{matrix.build_type}}
+
+    - name: Run the Test
+      run: |
+           sudo chmod +x /usr/local/bin/oiml_test
+           sudo /usr/local/bin/oiml_test
+      continue-on-error: true
+      

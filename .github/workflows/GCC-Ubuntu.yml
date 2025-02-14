@@ -1,0 +1,47 @@
+name: Build-and-Test-GCC-Ubuntu
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+    - main
+    - dev
+
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [Debug, Release]
+
+    steps:
+    - uses: actions/checkout@v4
+  
+    - name: Install the latest gcc compiler.
+      run:  |
+            sudo apt-get install build-essential
+            sudo apt-get install g++-14
+
+    - name: Install Seaborn
+      run: |
+            pip install seaborn
+
+    - name: Configure CMake
+      run: |
+           sudo cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/bin/g++-12 -DOIML_CPP_TESTS="TRUE"
+
+    - name: Build the Test
+      run: |
+           sudo cmake --build ./Build --config=${{matrix.build_type}}
+
+    - name: Install the Test
+      run: |
+           sudo cmake --install ./Build --config=${{matrix.build_type}}
+
+    - name: Run the Test
+      run: |
+           sudo chmod +x /usr/local/bin/oiml_test
+           sudo /usr/local/bin/oiml_test
+      continue-on-error: true

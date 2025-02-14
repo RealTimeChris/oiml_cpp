@@ -1,0 +1,50 @@
+name: Build-and-Test-CLANG-Ubuntu
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+    - main
+    - dev
+
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [Debug, Release]
+
+    steps:
+    - uses: actions/checkout@v4
+  
+    - name: Install the latest Clang compiler.
+      run:  |
+            sudo apt update
+            wget https://apt.llvm.org/llvm.sh
+            chmod u+x llvm.sh
+            sudo ./llvm.sh 19
+
+    - name: Install Seaborn
+      run: |
+            pip install seaborn
+
+    - name: Configure CMake
+      run: |
+           sudo cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/bin/clang++-19 -DOIML_CPP_TESTS="TRUE"
+
+    - name: Build the Test
+      run: |
+           sudo cmake --build ./Build --config=${{matrix.build_type}}
+
+    - name: Install the Test
+      run: |
+           sudo cmake --install ./Build --config=${{matrix.build_type}}
+
+    - name: Run the Test
+      run: |
+           sudo chmod +x /usr/local/bin/oiml_test
+           sudo /usr/local/bin/oiml_test
+      continue-on-error: true
+      
