@@ -1,7 +1,7 @@
 /*
 	MIT License
 
-	Copyright (c) 2024 OpenInfer
+	Copyright (c) 2025 OpenInfer
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this
 	software and associated documentation files (the "Software"), to deal in the Software
@@ -42,12 +42,6 @@
 	#else
 		#define OIML_REGULAR_VISUAL_STUDIO 1
 	#endif
-#endif
-
-#if (defined(__x86_64__) || defined(_M_AMD64)) && !defined(_M_ARM64EC)
-	#define OIML_IS_X86_64 1
-#else
-	#define OIML_IS_ARM64 1
 #endif
 
 #define OIML_GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__)

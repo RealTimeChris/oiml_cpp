@@ -1,18 +1,24 @@
 #pragma once
 
+#include <oiml/oiml_cpu/util_functions.hpp>
 #include <oiml/oiml_cpu/detect_isa.hpp>
-#include <oiml/oiml_cpu/common.hpp>
+#include <oiml/common/array.hpp>
+#include <oiml/common/common.hpp>
 
-#if defined(__aarch64__) || defined(_M_ARM64) || defined(_M_ARM64EC)
+#if defined(OIML_IS_ARM64)
 
 namespace oiml {	
 
-	OIML_INLINE void oiml_vec_dot_q8_0_f32_arm(int32_t n, float*s, const block_q8_0*x, const float*y) {
+	OIML_INLINE void oiml_vec_dot_q8_0_f32_arm(int32_t n, float* s, const void* x_new, const float* y) {
 		constexpr int32_t qk = QK8_0;
-		const int32_t nb	 = n / qk;
+		const int nb		 = n / qk;
 
 		float sumf = 0;
 
+		const block_q8_0<16>* __restrict x = static_cast<const block_q8_0<16>*>(x);
+		const float* __restrict y		   = vy;
+
+	#if defined(__ARM_NEON)
 		float32x4_t sumv0 = vdupq_n_f32(0.0f);
 		float32x4_t sumv1 = vdupq_n_f32(0.0f);
 		float32x4_t sumv2 = vdupq_n_f32(0.0f);
@@ -24,8 +30,8 @@ namespace oiml {
 
 		int ib = 0;
 		for (; ib < nb; ib += 1) {
-			const block_q8_0* restrict b = x++;
-			const float d				 = GGML_FP16_TO_FP32(b->d);
+			const block_q8_0<16>* __restrict b = x++;
+			const float d					   = oiml_compute_fp16_to_fp32(b->d);
 
 			//        const uint8x16x2_t x0_0 = vld2q_s8(x0->qs);
 			int8x16_t vec1 = vld1q_s8(b->qs);// load 16x int8_t
@@ -60,13 +66,15 @@ namespace oiml {
 
 		sumf = vaddvq_f32(sumv0) + vaddvq_f32(sumv1) + vaddvq_f32(sumv2) + vaddvq_f32(sumv3) + vaddvq_f32(sumv4) + vaddvq_f32(sumv5) + vaddvq_f32(sumv6) + vaddvq_f32(sumv7);
 
+	#endif
+
 		*s = sumf;
 	}
 
 	using oiml_vec_dot_q8_0_f32_type = decltype(&oiml_vec_dot_q8_0_f32_arm);
 
-	static constexpr oiml_vec_dot_q8_0_f32_type oiml_vec_dot_q8_0_f32_type_funcs[] = { oiml_vec_dot_q8_0_f32_arm };
-	static const oiml_vec_dot_q8_0_f32_type oiml_vec_dot_q8_0_f32_function{ get_work_func(oiml_vec_dot_q8_0_f32_type_funcs, internal::cpu_arch_index) };
+	static constexpr array<oiml_vec_dot_q8_0_f32_type, 1> oiml_vec_dot_q8_0_f32_type_funcs{ oiml_vec_dot_q8_0_f32_arm };
+	static const oiml_vec_dot_q8_0_f32_type oiml_vec_dot_q8_0_f32_function{ get_work_func(oiml_vec_dot_q8_0_f32_type_funcs, cpu_arch_index) };
 }
 
 #endif

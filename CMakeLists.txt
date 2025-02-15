@@ -1,6 +1,6 @@
 ﻿#	MIT License
 #
-#	Copyright (c) 2024 OpenInfer
+#	Copyright (c) 2025 OpenInfer
 #
 #	Permission is hereby granted, free of charge, to any person obtaining a copy of this 
 #	software and associated documentation files (the "Software"), to deal in the Software 
@@ -26,7 +26,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/CMake;")
 
 set(PROJECT_NAME "oiml")
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 project(
@@ -54,17 +54,16 @@ file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include
     "$<INSTALL_INTERFACE:include/>"
  )
 
-target_compile_features("${PROJECT_NAME}" INTERFACE "cxx_std_23")
+target_compile_features("${PROJECT_NAME}" INTERFACE "cxx_std_20")
  
 target_compile_options(
 	"${PROJECT_NAME}" INTERFACE
 	"$<$<AND:$<STREQUAL:$<UPPER_CASE:${UBSAN}>,TRUE>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fsanitize=undefined>"
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/Oi;/Ot;/GT;/GL;/fp:fast;/permissive->"
-	"$<$<CXX_COMPILER_ID:CLANG>:-mavx2;-mavx;-mfma;-mavx512f;-msse4.2>"
-	"$<$<CXX_COMPILER_ID:Clang>:-mavx2;-mavx;-mfma;-mavx512f;-msse4.2>"
-	"$<$<CXX_COMPILER_ID:GNU>:-mavx2;-mavx;-mfma;-mavx512f;-msse4.2>"
-	"${AVX_FLAG}"
+	"$<$<STREQUAL:${CMAKE_SYSTEM_PROCESSOR},x86_64>:$<$<CXX_COMPILER_ID:Clang>:-mavx2;-mavx;-mfma;-msse4.2>>"
+	"$<$<CXX_COMPILER_ID:MSVC>:/arch:AVX2>"
+    "$<$<STREQUAL:${CMAKE_SYSTEM_PROCESSOR},x86_64>:$<$<CXX_COMPILER_ID:GNU>:-mavx2;-mavx;-mfma;-msse4.2>>"
 )
  
 target_link_options(

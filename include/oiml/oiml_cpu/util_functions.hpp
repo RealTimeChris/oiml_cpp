@@ -1,8 +1,16 @@
 #pragma once
 
-#include <oiml/config.hpp>
+#include <oiml/common/config.hpp>
+#include <oiml/common/array.hpp>
 #include <cstdint>
+#include <array>
 #include <bit>
+
+#if defined(OIML_MAC)
+
+#elif defined(OIML_MSVC) || defined(OIML_LINUX)
+	#include "immintrin.h"
+#endif
 
 namespace oiml {
 
@@ -32,8 +40,8 @@ namespace oiml {
 		return fp32_from_bits(result);
 	}
 
-	inline static std::array<float, (1 << 16)> fp16_to_32_array{ [] {
-		std::array<float, (1 << 16)> returnValues{};
+	inline static array<float, (1 << 16)> fp16_to_32_array{ [] {
+		array<float, (1 << 16)> returnValues{};
 		for (uint32_t x = 0; x < (1 << 16); ++x) {
 			returnValues[x] = oiml_compute_fp16_to_fp32_raw(static_cast<uint16_t>(x));
 		}
@@ -42,6 +50,16 @@ namespace oiml {
 
 	OIML_INLINE static constexpr float oiml_compute_fp16_to_fp32(uint16_t val) {
 		return fp16_to_32_array[val];
+	}
+
+	OIML_INLINE static void oi_prefetch(const void* ptr) noexcept {
+#if defined(OIML_MAC) && defined(__arm64__)
+		__builtin_prefetch(ptr, 0, 0);
+#elif defined(OIML_MSVC) || defined(OIML_GNUCXX) || defined(OIML_CLANG)
+		_mm_prefetch(static_cast<const char*>(ptr), _MM_HINT_T0);
+#else
+	#error "Compiler or architecture not supported for prefetching"
+#endif
 	}
 
 }

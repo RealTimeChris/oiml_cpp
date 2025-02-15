@@ -20,12 +20,15 @@
 	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/OpenInfer/oiml
-/// Updated: Sep 3, 2024
+/// Updated: Sep 3, 2025
 
 #pragma once
 
-#include <oiml/config.hpp>
+#include <oiml/common/config.hpp>
 #include <oiml/oiml_cpu/detect_isa.hpp>
+#include <oiml/common/allocator.hpp>
+#include <oiml/common/file_loader.hpp>
+#include <vector>
 #include <array>
 
 #if defined(OIML_IS_X86_64)
@@ -38,7 +41,7 @@ namespace oiml {
 	using oiml_simd_int_256 = __m256i;
 	using oiml_simd_int_512 = __m512i;
 
-	constexpr std::array<uint64_t, 3> bitsPerStep{ { 128, 256, 512 } };
+	constexpr array<uint64_t, 3> bitsPerStep{ { 128, 256, 512 } };
 
 #elif defined(OIML_IS_ARM64)
 
@@ -72,12 +75,7 @@ namespace oiml {
 	using oiml_half = uint16_t;
 
 	template<size_t alignment> struct block_q8_0 {
-		OIML_ALIGN(alignment) std::array<int8_t, 32> qs {};
+		OIML_ALIGN(alignment) array<int8_t, 32> qs {};
 		oiml_half d{};
 	};
-
-	template<typename function_type, size_t size> const function_type& get_work_func(const std::array<function_type, size>& functions, const size_t index) {
-		std::cout << "CURRENT IMPL INDEX: " << index << std::endl;
-		return functions[index];
-	}
 }
